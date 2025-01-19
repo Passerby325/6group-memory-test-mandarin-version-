@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机字母记忆游戏</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f5f5dc; /* 更改背景颜色 */
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .content, .example {
+            max-width: 600px;
+            text-align: center;
+        }
+        .example {
+            text-align: left;
+        }
+        #letters, #input, #results, #continueButton, #retryButton {
+            display: none;
+            margin-top: 20px;
+        }
+        #letters div, #input div {
+            margin: 10px 0;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        #timer {
+            font-size: 1.5em;
+            color: #ff0000;
+            margin-top: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="titleSection" class="content">
+        <h1>随机字母记忆游戏</h1>
+        <p>这个网页会显示6组5个随机字母。你有20秒的时间来记住它们。你可以选择显示一个计时器。在记忆阶段后，你将在提供的字段中输入你的答案，并计算你的准确率。如果答对两个或以上，有神秘惊喜！！！</p>
+        <div class="example">
+            <p>使用示例：</p>
+            <ul>
+                <li>点击“开始”按钮开始记忆阶段。</li>
+                <li>你会看到6组5个随机字母。</li>
+                <li>如果你选择显示计时器，它会从20秒开始倒计时。</li>
+                <li>在20秒后，或者如果你点击“继续”，你将被提示输入你记住的字母。</li>
+                <li>提交你的答案来查看你的准确率。</li>
+            </ul>
+            <p><strong>示例字母：</strong></p>
+            <div id="exampleLetters">
+                <div>ABCDE</div>
+                <div>FGHIJ</div>
+                <div>KLMNO</div>
+                <div>PQRST</div>
+                <div>UVWXY</div>
+                <div>ZABCD</div>
+            </div>
+        </div>
+        <label>
+            <input type="checkbox" id="showTimer"> 显示计时器
+        </label><br>
+        <button id="startButton" class="button">开始</button>
+    </div>
+    <div id="timer"></div>
+    <div id="letters"></div>
+    <div id="input">
+        <h2>输入你记住的字母：</h2>
+        <div id="inputFields"></div>
+        <button id="submitButton" class="button">提交</button>
+    </div>
+    <div id="results"></div>
+    <button id="continueButton" class="button">继续</button>
+    <button id="retryButton" class="button">重试</button>
+
+    <script>
+        const titleSection = document.getElementById('titleSection');
+        const startButton = document.getElementById('startButton');
+        const showTimerCheckbox = document.getElementById('showTimer');
+        const timerDiv = document.getElementById('timer');
+        const lettersDiv = document.getElementById('letters');
+        const inputDiv = document.getElementById('input');
+        const inputFieldsDiv = document.getElementById('inputFields');
+        const resultsDiv = document.getElementById('results');
+        const submitButton = document.getElementById('submitButton');
+        const continueButton = document.getElementById('continueButton');
+        const retryButton = document.getElementById('retryButton');
+
+        let randomLetters = [];
+        let timerInterval;
+
+        function generateRandomLetters() {
+            const letters = [];
+            for (let i = 0; i < 6; i++) {
+                let group = '';
+                for (let j = 0; j < 5; j++) {
+                    const randomChar = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+                    group += randomChar;
+                }
+                letters.push(group);
+            }
+            return letters;
+        }
+
+        function displayLetters(letters) {
+            lettersDiv.innerHTML = '';
+            letters.forEach(group => {
+                const div = document.createElement('div');
+                div.textContent = group;
+                lettersDiv.appendChild(div);
+            });
+        }
+
+        function createInputFields() {
+            inputFieldsDiv.innerHTML = '';
+            for (let i = 0; i < 6; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 5;
+                input.style.width = '100px';
+                inputFieldsDiv.appendChild(input);
+                inputFieldsDiv.appendChild(document.createElement('br'));
+            }
+        }
+
+        function startTimer(duration, display) {
+            let timer = duration, minutes, seconds;
+            timerInterval = setInterval(() => {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+
+        startButton.addEventListener('click', () => {
+            randomLetters = generateRandomLetters();
+            displayLetters(randomLetters);
+            titleSection.classList.add('hidden');
+            lettersDiv.style.display = 'block';
+            continueButton.style.display = 'block';
+            alert('你有20秒的时间来记住这些字母。');
+
+            if (showTimerCheckbox.checked) {
+                timerDiv.style.display = 'block';
+                startTimer(20, timerDiv);
+            }
+
+            setTimeout(() => {
+                lettersDiv.style.display = 'none';
+                continueButton.style.display = 'none';
+                inputDiv.style.display = 'block';
+                timerDiv.style.display = 'none';
+                clearInterval(timerInterval);
+            }, 20000);
+        });
+
+        continueButton.addEventListener('click', () => {
+            lettersDiv.style.display = 'none';
+            continueButton.style.display = 'none';
+            inputDiv.style.display = 'block';
+            timerDiv.style.display = 'none';
+            clearInterval(timerInterval);
+        });
+
+        submitButton.addEventListener('click', () => {
+            const userAnswers = Array.from(inputFieldsDiv.querySelectorAll('input')).map(input => input.value.toUpperCase().trim());
+            let correctCount = 0;
+            const groupResults = [];
+
+            randomLetters.forEach((group, index) => {
+                let correct = 0;
+                if (userAnswers[index]) {
+                    for (let i = 0; i < 5; i++) {
+                        if (userAnswers[index][i] === group[i]) {
+                            correct++;
+                        }
+                    }
+                }
+                groupResults.push(`组 ${index + 1}: ${correct}/5 正确`);
+                correctCount += correct;
+            });
+
+            const totalCharacters = randomLetters.length * 5;
+            const accuracy = (correctCount / totalCharacters) * 100;
+            
+            let fullCorrectGroups = groupResults.filter(result => result.includes('5/5 正确')).length;
+
+            resultsDiv.innerHTML = `<p>正确答案：</p><pre>${randomLetters.join('\n')}</pre>`;
+            resultsDiv.innerHTML += `<p>组结果：</p><pre>${groupResults.join('\n')}</pre>`;
+            resultsDiv.innerHTML += `<p>总准确率：${accuracy.toFixed(2)}%</p>`;
+            resultsDiv.style.display = 'block';
+            retryButton.style.display = 'block';
+
+            if (fullCorrectGroups >= 2) {
+                const jokes = [
+                    "小红和小蓝打架谁赢，小蓝赢，因为小红书。",
+                    "有一天，皇帝上朝对大臣说，孤的功，你们都看在眼里，孤的败，就下朝了。",
+                    "太空有空间站，太挤没有空间站",
+                    "你有时间简史吗？我有时间也不捡啊！",
+                    "一个黑帮老大让小弟给他倒果汁  但最后小弟被老大杀了 因为小弟 知道（汁倒）的太多了",
+                    "坏人和好人一起坐车，谁先下车？坏人，因为好人做到底。",
+                    "警察应该怎么去除敌方的眼线呢？用卸妆水",
+                    "问：路易十六去刑场看导航听到的最后一句话是什么？答：前方100米掉头，因为是真掉头。还是不要开路易十六的玩笑了，毕竟开玩笑也得有个头啊",
+                    "问：为什么日本动漫发达？答：因为他们1945年就二次原国家了。因为二次，原（子弹）",
+                    "问：世界上最卷的地方是哪里？答：木乃伊博物馆，因为有的是人干",
+                    "问：为什么日本动漫从天而降的总是美少女？答：因为天降小男孩不吉利",
+                    "问：请问中国历史上最早的爱豆是谁答：秦始皇，据史料记载当时读书人纷纷入坑，他还是最早的带货主播，带的书都火了",
+                    "问：蜘蛛侠被警察抓走了，请问他犯的什么罪？答：走丝",
+                    "问：为什么美国人玩不好王者荣耀？答：因为他们开局少两座塔",
+                    "问：知道为什么洗洁精在以色列销量不好吗？答：因为洗洁精是去油的",
+                    "问：为什么路易十六在高速公路最安全答：因为高速公路禁止掉头",
+                    "问：老鹰不见了，请问是谁偷的？答：猫，因为猫头（偷）鹰",
+                    "问：在所有动物中，请问哪种动物要求最多？答：猪，因为诸多要求",
+                    "问：什么东西最提神？答：十字架，因为上面提着一个神",
+                    "问：为什么日本的鸡蛋不用盒装，而是一个一个卖答：因为日本不喜欢盒蛋",
+                    "你知道一个玻璃从20楼掉下来它想和你说什么嘛 它要说晚安因为它碎了",
+                    "小猪小羊小牛一起去逛便利店 小牛小猪都被打了 但是小羊没有你知道为什么嘛 因为便利店二十四小时不打烊",
+                    "小明和小红相约在后山碰头,后来他们都 得了脑震荡。",
+                    "我说我在一个岛上,朋友问我在哪个岛, 我说在穷困潦岛(穷困潦倒)。",
+                    "什么面包走在路上,走着走着突然会扭伤脚。牛角包。",
+                    "有一天,小蚂蚁迷路找不到蚁窝,可着急了, 恰好看到它的朋友经过,于是冲过去大喊一声: “哥们儿!你……你都如何回蚁窝(回忆我)? ”那朋友一愣,然后反问道:“带…带………带着 笑或是很沉默?”",
+                    "一只小绵羊被剪了羊毛后就再也睡不着了, 为什么?因为“失绵”了。",
+                    "虾和蚌同时考了一百分,老师问虾:“你 抄的谁的?”虾说:“我抄蚌的。”老师说: “你棒什么棒!”",
+                    "有一个人叫小明，小明没听见。",
+                    "“医生，您能帮我开个药吗？”“以后这种小事不要来麻烦我”医生接过药瓶并帮我拧开。",
+                    "“你知道一张椅子用英文怎么说吗？”“a chair？”“不对。是abandon（板凳）。",
+                    "为什么阿姨从不流汗，因为阿姨怕留下姨汗。",
+                    "爱笑的女生身材都不会差，为什么呢？乐极升杯。",
+                    "制定了plan，因为lan，只完成了个p。",
+                    "小象找到了一个新工作，每天下班回来都很生气，因为他在气象局工作。",
+                    "孙悟空被压在物质上下什么时候最想家？晚上，因为夜深人静的石猴，是想家的石猴。",
+                    "你知道海底什么生物最搞笑吗？海鳗。因为，海鳗（还蛮）搞笑的",
+                    "牛排煎太熟了，怎么办？放cheese，因为起死回生。",
+                    "从前有个文盲，有一天突然识字了。原来他到了十字路口。",
+                    "什么青蛙可以比双峰塔高？任何青蛙。因为双峰塔不会跳。",
+                    "台风天要带多少💰才能够出门?四千万(没事千万不要出门)",
+                    "小明看到一堵墙就忍不住把它打破.因为他有墙破症",
+                    "两个警察在路上巡逻迎面走来一个刚参加完热音社的高中生警察A:「他背上背的那是什么?」警察B:「不知道耶，电吉他吧。」然后警察A就拿电击棒把高中生电晕了",
+                    "李白是怎么死的呢？？？他 诗写过多",
+                    "what did the beach say as the tide(waves) came in?Long time, no sea",
+                    "从前有一位大师兄，他每天苦练铁头功，然后终于有一天练成了。下山之后脑袋被吸铁石吸走了",
+                    "许仙给白娘子买了一顶帽子，结果白娘子戴上就不能动了，原来那是一顶压蛇帽",
+                    "秃头的人适合看什么片??鬼片，因为会让他们头皮发毛。",
+                    "一位勇士躺在床上后背很痒，但是他不能翻身因为永世不得翻身",
+                    "你知道拔罐师傅会犯什么罪吗？你拔我罐罪"
+                ];
+                const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+                resultsDiv.innerHTML += `<p>恭喜你！你有两组或以上的准确率是100%！</p><p>这是一个冷笑话：</p><p>${randomJoke}</p>`;
+            }
+        });
+
+        retryButton.addEventListener('click', () => {
+            randomLetters = [];
+            inputFieldsDiv.innerHTML = '';
+            resultsDiv.innerHTML = '';
+            lettersDiv.style.display = 'none';
+            inputDiv.style.display = 'none';
+            resultsDiv.style.display = 'none';
+            retryButton.style.display = 'none';
+            titleSection.classList.remove('hidden');
+            createInputFields();
+        });
+
+        // 初始化输入字段
+        createInputFields();
+    </script>
+</body>
+</html>
